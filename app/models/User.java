@@ -21,18 +21,21 @@ public class User extends Model {
     public String password;
     @OneToMany(mappedBy = "sender")
     public List<ConnectionRequest> ConnectionRequestSent;
+
     @OneToMany(mappedBy = "receiver")
     public List<ConnectionRequest> ConnectionRequestReceived;
+
     @OneToOne
     public Profile profile;
+
     @ManyToMany
     @JoinTable(name = "user_connections",
             joinColumns = {
                     @JoinColumn(name = "user_id")
             },
-             inverseJoinColumns= {
-                     @JoinColumn(name = "connection_id")
-             }
+            inverseJoinColumns= {
+                    @JoinColumn(name = "connection_id")
+            }
     )
     public Set<User> connections;
 
@@ -47,11 +50,11 @@ public class User extends Model {
     }
 
     public User(String email,String password)
-        {
-           this.email=email;
-           this.password=BCrypt.hashpw(password,BCrypt.gensalt()); //gensalt generates a key and the password is encrypted
-        }
+    {
+        this.email=email;
+        this.password=BCrypt.hashpw(password,BCrypt.gensalt()); //gensalt generates a key and the password is encrypted
     }
+}
 
 
 

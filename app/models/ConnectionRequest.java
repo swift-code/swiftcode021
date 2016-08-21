@@ -4,7 +4,6 @@ import com.avaje.ebean.Model;
 import com.avaje.ebean.annotation.EnumValue;
 
 import javax.persistence.*;
-import javax.transaction.Status;
 
 /**
  * Created by lubuntu on 8/20/16.
@@ -14,8 +13,10 @@ public class ConnectionRequest extends Model {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long id;
+
     @ManyToOne
     public User sender;
+
     @ManyToOne
     public User receiver;
     public Status status;
@@ -26,5 +27,6 @@ public class ConnectionRequest extends Model {
         ACCEPTED
     }
 
+    public static Finder<Long,ConnectionRequest> find = new Finder<Long,ConnectionRequest>(ConnectionRequest.class);
 
 }

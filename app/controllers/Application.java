@@ -10,7 +10,6 @@ import models.User;
 import play.data.Form;
 import play.data.FormFactory;
 import play.mvc.Controller;
-import play.mvc.RangeResults;
 import play.mvc.Result;
 
 import javax.inject.Inject;

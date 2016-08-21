@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import models.Profile;
 import models.User;
+import play.data.DynamicForm;
 import play.data.FormFactory;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -21,31 +22,76 @@ import java.util.stream.Collectors;
  */
 
 public class HomeController extends Controller
-    {
-        @Inject
-        ObjectMapper objectMapper;
-        @Inject
-        FormFactory formFactory;
+{
+    @Inject
+    ObjectMapper objectMapper;
+    @Inject
+    FormFactory formFactory;
 
     public Result getProfile(Long userId)
+    {
+        User user=User.find.byId(userId);
+        Profile profile= Profile.find.byId(userId);
+        ObjectNode data= objectMapper.createObjectNode();
+
+
+
+        List<JsonNode>connected=user.connections.stream().map(x->
         {
-            User user=User.find.byId(userId);
-            Profile profile= Profile.find.byId(userId);
-            ObjectNode data= objectMapper.createObjectNode();
-            List<Long>connectedUserId=user.connections.stream().map(x->x.id).collect(Collectors.toList());
-            List<Long>connectionRequestSentUserIds = user.ConnectionRequestSent.stream()
-                    .map(x->x.receiver.id).collect(Collectors.toList());
-            List<JsonNode>suggestions=User.find.all().stream()
-                    .filter(x -> !connectedUserId.contains(x.id) && !connectionRequestSentUserIds.contains(x.id)
-                    &&!Objects.equals(x.id,userId)).map(x-> {
+            User connectedUser=User.find.byId(userId);
+            Profile connectedProfile=Profile.find.byId(connectedUser.profile.id);
+
+            ObjectNode connectionJson = objectMapper.createObjectNode();
+            connectionJson.put("email",connectedUser.email);
+            connectionJson.put("firstName",connectedProfile.firstName);
+            connectionJson.put("lastName",connectedProfile.lastName);
+            return connectionJson;
+        }).collect(Collectors.toList());
+
+        List<Long>connectedUserId=user.connections.stream().map(x->x.id).collect(Collectors.toList());
+        List<Long>connectionRequestSentUserIds = user.ConnectionRequestSent.stream()
+                .map(x->x.receiver.id).collect(Collectors.toList());
+        List<JsonNode>suggestions=User.find.all().stream()
+                .filter(x -> !connectedUserId.contains(x.id) && !connectionRequestSentUserIds.contains(x.id)
+                        &&!Objects.equals(x.id,userId)).map(x-> {
                     ObjectNode userJson = objectMapper.createObjectNode();
                     userJson.put("email",x.email);
                     userJson.put("id",x.id);
                     return userJson;}).collect(Collectors.toList());
 
-            data.set("Suggestions",null);
-            return ok();
 
-        }
+
+
+        data.set("Suggestions",objectMapper.valueToTree(suggestions));
+
+        data.set("connectionRequestsReceived", objectMapper.valueToTree(
+                user.ConnectionRequestReceived.stream()
+                        .map(x -> {
+                            User requestor = User.find.byId(x.sender.id);
+                            Profile requestorProfile = Profile.find.byId(requestor.profile.id);
+                            ObjectNode requestorjson = objectMapper.createObjectNode();
+                            requestorjson.put("email", requestor.email);
+                            requestorjson.put("firstName", requestorProfile.firstName);
+                            requestorjson.put("lastName", requestorProfile.lastName);
+                            return requestorjson;
+                        }).collect(Collectors.toList())));
+
+        return ok(data);
+
     }
+
+    public Result updateProfile(Long userId)
+    {
+
+        DynamicForm form = formFactory.form().bindFromRequest();
+        User user = User.find.byId(userId);
+        Profile profile = Profile.find.byId(user.profile.id);
+        profile.company = form.get("company");
+        profile.firstName = form.get("firstName");
+        profile.lastName = form.get("lastName");
+        Profile.db().update(profile);
+        return ok();
+
+    }
+}
 
