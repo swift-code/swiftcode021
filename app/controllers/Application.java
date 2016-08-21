@@ -3,6 +3,7 @@ package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import forms.LoginForm;
 import forms.SignUpForm;
 import models.Profile;
 import models.User;
@@ -26,19 +27,36 @@ public class Application extends Controller {
 
     public Result signup()
     {
-        Form<SignUpForm> form = formFactory.form(SignUpForm.class).bindFromRequest();
-        if(form.hasErrors())
+        Form<SignUpForm> signupform = formFactory.form(SignUpForm.class).bindFromRequest();
+        if(signupform.hasErrors())
         {
-            return ok(form.errorsAsJson());
+            return ok(signupform.errorsAsJson());
         }
 
-        Profile profile=new Profile(form.data().get("firstname"),form.data().get("lastname"));
+        Profile profile=new Profile(signupform.data().get("firstname"),signupform.data().get("lastname"));
         Profile.db().save(profile);
 
-        User user= new User(form.data().get("email"),form.data().get("password"));
+        User user= new User(signupform.data().get("email"),signupform.data().get("password"));
         user.profile=profile;
         User.db().save(user);
 
         return ok((JsonNode)objectMapper.valueToTree(user));
+    }
+
+    public Result login()
+    {
+        Form<LoginForm> loginform = formFactory.form(LoginForm.class).bindFromRequest();
+        if(loginform.hasErrors())
+        {
+            return ok(loginform.errorsAsJson());
+        }
+        else
+        {
+
+            User user= new User(loginform.data().get("email"),loginform.data().get("password"));
+            User.db().save(user);
+            return ok((JsonNode)objectMapper.valueToTree(user));
+        }
+
     }
 }
