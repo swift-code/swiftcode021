@@ -1,6 +1,7 @@
 package models;
 
 import com.avaje.ebean.Model;
+import org.mindrot.jbcrypt.BCrypt;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,6 +20,14 @@ public class Profile extends Model {
     public String lastName;
     public String company;
 
-
-
+    public Profile(String firstName,String lastname)
+    {
+        this.firstName=firstName;
+        this.lastName=lastName;
     }
+}
+
+
+
+
+
